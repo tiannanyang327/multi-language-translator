@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+    <title>CSV Translator</title>
+    <style>
+        #loading {
+            display: block;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #555;
+        }
+        #progress {
+            width: 100%;
+            background-color: #f3f3f3;
+        }
+        #progress-bar {
+            width: 0%;
+            height: 30px;
+            background-color: #4caf50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+        }
+    </style>
+    <script>
+        function updateProgress() {
+            fetch('/progress')
+                .then(response => response.json())
+                .then(data => {
+                    var progressBar = document.getElementById('progress-bar');
+                    var progress = (data.completed / data.total) * 100;
+                    progressBar.style.width = progress + '%';
+                    progressBar.innerText = Math.round(progress) + '%';
+
+                    if (progress < 100) {
+                        setTimeout(updateProgress, 1000);
+                    } else {
+                        document.getElementById('loading').innerText = '翻译完成！点击下载：';
+                        var downloadLink = document.createElement('a');
+                        downloadLink.href = '/download';
+                        downloadLink.innerText = '下载翻译后的文件';
+                        document.getElementById('loading').appendChild(downloadLink);
+                    }
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+        });
+    </script>
+</head>
+<body>
+    <div id="loading">
+        别急，等一会儿的...
+        <div id="progress">
+            <div id="progress-bar">0%</div>
+        </div>
+    </div>
+</body>
+</html>

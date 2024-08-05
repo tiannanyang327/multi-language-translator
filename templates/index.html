@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+    <title>CSV Translator</title>
+    <style>
+        #loading {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #555;
+        }
+        #progress-info {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        #download-link {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        function showLoading() {
+            var formData = new FormData(document.getElementById('translate-form'));
+            var translateButton = document.getElementById('translate-button');
+            var progressInfo = document.getElementById('progress-info');
+            var downloadLink = document.getElementById('download-link');
+            translateButton.disabled = true;
+            translateButton.innerText = 'Translating...';
+            progressInfo.style.display = 'block';
+            progressInfo.innerText = 'Translating... 0/0';
+            downloadLink.style.display = 'none'; // 隐藏下载链接
+
+            fetch('/translate', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                checkTranslationCompletion();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                translateButton.disabled = false;
+                translateButton.innerText = 'Translate';
+                progressInfo.style.display = 'none';
+            });
+
+            return false; // Prevent the form from submitting normally
+        }
+
+        function checkTranslationCompletion() {
+            fetch('/progress')
+                .then(response => response.json())
+                .then(data => {
+                    var translateButton = document.getElementById('translate-button');
+                    var progressInfo = document.getElementById('progress-info');
+                    var downloadLink = document.getElementById('download-link');
+                    progressInfo.innerText = `Translating... ${data.completed}/${data.total}`;
+
+                    if (data.finished) {
+                        translateButton.disabled = false;
+                        translateButton.innerText = 'Translate';
+                        progressInfo.innerText = 'Translation completed!';
+                        downloadLink.style.display = 'block';
+                    } else {
+                        setTimeout(checkTranslationCompletion, 1000);
+                    }
+                });
+        }
+    </script>
+</head>
+<body>
+    <h1>CSV Translator</h1>
+    <form id="translate-form" onsubmit="return showLoading()">
+        <label for="file">上传 CSV 文件:</label>
+        <input type="file" id="file" name="file" required><br><br>
+        <div id="example">
+            <label>示例 CSV 文件格式:</label>
+            <img src="/static/example_csv.png" alt="CSV 示例格式" style="max-width: 30%; height: auto;">
+        </div><br>
+        <label for="translation-target">翻译对象:</label><br>
+        <input type="radio" id="app" name="translation_target" value="app" required>
+        <label for="app">公版 App 文案</label><br>
+        <input type="radio" id="backend" name="translation_target" value="backend" required>
+        <label for="backend">公版后端文案</label><br>
+        <input type="radio" id="f_app" name="translation_target" value="f_app" required>
+        <label for="f_app">F App 文案</label><br><br>
+        <p>当前支持语言: cn, zh-Hant, en, ja, de, fr, ru, it, es, fi, he, ar, vi, pt, pl, tr, cs</p>
+        <p>Note: 此工具针对 %@ 以及 {variable} 表示的变量不做翻译处理。</p>
+        <button id="translate-button" type="submit">开始翻译</button>
+    </form>
+    <div id="progress-info" style="display: none;"></div>
+    <div id="download-link">
+        <a href="/download">下载翻译后的文件</a>
+    </div>
+</body>
+</html>
