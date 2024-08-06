@@ -18,6 +18,22 @@ progress = {
     'finished': False
 }
 
+# 从环境变量中读取 Google Cloud JSON 密钥内容
+google_creds_base64 = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_BASE64')
+
+# 确保环境变量已设置
+if not google_creds_base64:
+    raise ValueError("The GOOGLE_APPLICATION_CREDENTIALS_BASE64 environment variable is not set")
+
+# 解码并写入临时文件
+creds_path = '/tmp/google_creds.json'
+with open(creds_path, 'w') as f:
+    json_content = base64.b64decode(google_creds_base64).decode('utf-8')
+    f.write(json_content)
+
+# 设置 Google Cloud 凭证文件路径
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_path
+
 # 初始化 Google Cloud Translation 客户端
 translate_client = translate.Client()
 
