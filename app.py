@@ -6,6 +6,7 @@ import os
 import threading
 import html
 import re
+import base64
 from datetime import datetime
 
 app = Flask(__name__)
@@ -18,17 +19,21 @@ progress = {
     'finished': False
 }
 
-# 从环境变量中读取 Google Cloud JSON 密钥内容
-google_creds_base64 = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_BASE64')
+def load_local_credentials(file_path):
+    with open(file_path, 'r') as file:
+        return base64.b64encode(file.read().encode()).decode()
 
-# 确保环境变量已设置
-if not google_creds_base64:
+# 尝试从环境变量加载
+credentials_base64 = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_BASE64')
+
+# 如果环境变量不存在，则加载本地文件
+if not credentials_base64:
     raise ValueError("The GOOGLE_APPLICATION_CREDENTIALS_BASE64 environment variable is not set")
 
 # 解码并写入临时文件
-creds_path = '/tmp/google_creds.json'
+creds_path = 'google_creds.json'
 with open(creds_path, 'w') as f:
-    json_content = base64.b64decode(google_creds_base64).decode('utf-8')
+    json_content = base64.b64decode(credentials_base64).decode('utf-8')
     f.write(json_content)
 
 # 设置 Google Cloud 凭证文件路径

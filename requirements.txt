@@ -18,7 +18,7 @@ Jinja2==3.1.4
 MarkupSafe==2.1.5
 numpy
 pandas
-protobuf>=5.26.1,<6.0dev
+protobuf
 python-dateutil==2.9.0.post0
 pytz==2024.1
 rfc3986==1.5.0
